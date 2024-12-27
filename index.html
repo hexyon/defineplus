@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link href="favicon.ico" rel="icon" type="image/x-icon"/>
+<title>Define+</title>
+<style>
+    :root {
+        --system-blue: #007AFF;
+        --system-gray: #8E8E93;
+        --system-background: #F2F2F7;
+    }
+
+    @font-face {
+        font-family: 'Roboto';
+        src: url('Roboto/Roboto-Regular.ttf') format('truetype');
+    }
+    @font-face {
+        font-family: 'Roboto-Bold';
+        src: url('Roboto/Roboto-Bold.ttf') format('truetype');
+    }
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+        font-family: 'Roboto', Arial, sans-serif;
+        background: var(--system-background);
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .container {
+        display: flex;
+        flex: 1;
+        padding: 20px;
+        gap: 20px;
+        overflow: hidden;
+    }
+
+    .search-panel {
+        flex: 0 0 300px;
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .definitions-panel {
+        flex: 0 0 400px;
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        overflow-y: auto;
+    }
+
+    .thesaurus-panel {
+        flex: 1;
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 17px;
+        border: none;
+        border-radius: 10px;
+        background: var(--system-background);
+        color: black;
+        font-family: inherit;
+    }
+
+    .search-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--system-blue);
+    }
+
+    .word-title {
+        font-family: 'Roboto', Arial, sans-serif;
+        font-size: 34px;
+        font-weight: 700;
+        color: black;
+        margin-bottom: 8px;
+    }
+
+    .phonetic {
+        color: var(--system-gray);
+        font-size: 17px;
+        margin-bottom: 20px;
+    }
+
+    .section {
+        margin: 20px 0;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #007bff;
+        margin-bottom: 12px;
+    }
+
+    .definition {
+        margin-bottom: 12px;
+        line-height: 1.4;
+        font-size: 17px;
+    }
+
+    .example {
+        color: var(--system-gray);
+        margin-top: 8px;
+        font-size: 15px;
+        line-height: 1.4;
+    }
+
+    .word-chip {
+        display: inline-flex;
+        background: var(--system-background);
+        padding: 6px 12px;
+        border-radius: 8px;
+        margin: 4px;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .word-chip:hover {
+        background: var(--system-blue);
+        color: white;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 20px;
+        display: none;
+    }
+
+    .loading-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--system-background);
+        border-top: 2px solid var(--system-blue);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .error-message {
+        color: #FF3B30;
+        text-align: center;
+        padding: 20px;
+        display: none;
+        font-size: 15px;
+    }
+
+    .divider {
+        width: 100%;
+        height: 1px;
+        background: var(--system-background);
+        margin: 20px 0;
+    }
+
+    .image-section {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 20px;
+    }
+
+    .word-image {
+        max-width: 100%;
+        min-height: 300px;
+        border-radius: 10px;
+        object-fit: cover;
+    }
+
+    /* New styles for navigation and clickable mode */
+    .navigation-buttons {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .nav-button {
+        padding: 8px 16px;
+        background: var(--system-blue);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 15px;
+        transition: opacity 0.2s;
+    }
+
+    .nav-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .clickable-toggle {
+        padding: 8px 16px;
+        background: #e8e8e8;
+        color: black;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 15px;
+        transition: background 0.2s;
+    }
+
+    .clickable-toggle.active {
+        background: var(--system-blue);
+        color: white;
+    }
+
+    .clickable-word {
+        cursor: pointer;
+    }
+
+    .clickable-word:hover {
+        color: var(--system-blue);
+        text-decoration: underline;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 1024px) {
+        .container {
+            flex-direction: column;
+        }
+        .search-panel,
+        .definitions-panel,
+        .thesaurus-panel {
+            flex: none;
+            width: 100%;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="search-panel">
+        <div class="navigation-buttons">
+            <button class="nav-button" id="prevButton" disabled>Previous</button>
+            <button class="nav-button" id="nextButton" disabled>Next</button>
+            <button class="clickable-toggle" id="clickableToggle">Clickable Mode</button>
+        </div>
+        <input type="text" class="search-input" placeholder="Search word...">
+        <div class="loading">
+            <div class="loading-spinner"></div>
+        </div>
+        <div class="error-message"></div>
+    </div>
+    
+    <div class="definitions-panel">
+        <!-- Definitions will be inserted here -->
+    </div>
+    
+    <div class="thesaurus-panel">
+        <!-- Synonyms, antonyms, and image will be inserted here -->
+    </div>
+</div>  
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('.search-input');
+    const definitionsPanel = document.querySelector('.definitions-panel');
+    const thesaurusPanel = document.querySelector('.thesaurus-panel');
+    const loading = document.querySelector('.loading');
+    const errorMessage = document.querySelector('.error-message');
+    const prevButton = document.getElementById('prevButton');
+    const nextButton = document.getElementById('nextButton');
+    const clickableToggle = document.getElementById('clickableToggle');
+    
+    let searchTimeout;
+    let searchHistory = [];
+    let currentHistoryIndex = -1;
+    let isClickableMode = false;
+
+    async function fetchWordData(word) {
+        try {
+            const [dictResponse, synonymsResponse, antonymsResponse, imageResponse] = await Promise.all([
+                fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`),
+                fetch(`https://api.datamuse.com/words?rel_syn=${word}`),
+                fetch(`https://api.datamuse.com/words?rel_ant=${word}`),
+                fetch(`/api/pixabay?word=${encodeURIComponent(word)}`)
+            ]);
+
+            const [dictionary, synonyms, antonyms, imageData] = await Promise.all([
+                dictResponse.json(),
+                synonymsResponse.json(),
+                antonymsResponse.json(),
+                imageResponse.json()
+            ]);
+
+            return {
+                dictionary,
+                synonyms,
+                antonyms,
+                image: imageData.hits[0]?.webformatURL
+            };
+        } catch (error) {
+            throw new Error('Failed to fetch word data');
+        }
+    }
+
+    function makeTextClickable(text) {
+        return text.split(/\b/).map(word => {
+            if (/^[a-zA-Z]+$/.test(word)) {
+                return `<span class="clickable-word">${word}</span>`;
+            }
+            return word;
+        }).join('');
+    }
+
+    function displayResults(data) {
+        const { dictionary, synonyms, antonyms, image } = data;
+        const wordData = dictionary[0];
+
+        // Definitions Panel
+        let definitionsHtml = `
+            <div class="word-title">${wordData.word}</div>
+            <div class="phonetic">${wordData.phonetic || ''}</div>
+        `;
+
+        wordData.meanings.forEach(meaning => {
+            definitionsHtml += `
+                <div class="section">
+                    <div class="section-title">${meaning.partOfSpeech}</div>
+            `;
+
+            meaning.definitions.forEach(def => {
+                const processedDefinition = isClickableMode ? 
+                    makeTextClickable(def.definition) : 
+                    def.definition;
+
+                const processedExample = def.example && isClickableMode ? 
+                    makeTextClickable(def.example) : 
+                    def.example;
+
+                definitionsHtml += `
+                    <div class="definition">
+                        • ${processedDefinition}
+                        ${def.example ? `<div class="example">"${processedExample}"</div>` : ''}
+                    </div>
+                `;
+            });
+
+            definitionsHtml += `</div>`;
+        });
+
+        // Thesaurus Panel
+        let thesaurusHtml = '';
+        
+        if (synonyms.length > 0) {
+            thesaurusHtml += `
+                <div class="section">
+                    <div class="section-title">Synonyms</div>
+                    ${synonyms.slice(0, 10).map(syn => 
+                        `<span class="word-chip">${syn.word}</span>`
+                    ).join('')}
+                </div>
+            `;
+        }
+
+        if (antonyms.length > 0) {
+            thesaurusHtml += `
+                <div class="section">
+                    <div class="section-title">Antonyms</div>
+                    ${antonyms.slice(0, 10).map(ant => 
+                        `<span class="word-chip">${ant.word}</span>`
+                    ).join('')}
+                </div>
+            `;
+        }
+
+        thesaurusHtml += `
+            <div class="divider"></div>
+            <div class="image-section">
+                <div class="section-title">Visual Reference</div>
+                ${image ? `<img src="${image}" alt="${wordData.word}" class="word-image">` : 
+                         '<div class="error-message">No image available</div>'}
+            </div>
+        `;
+
+        definitionsPanel.innerHTML = definitionsHtml;
+        thesaurusPanel.innerHTML = thesaurusHtml;
+
+        updateNavigationButtons();
+    }
+
+    function updateNavigationButtons() {
+        prevButton.disabled = currentHistoryIndex <= 0;
+        nextButton.disabled = currentHistoryIndex >= searchHistory.length - 1;
+    }
+
+    searchInput.addEventListener('input', function(e) {
+        const word = e.target.value.trim();
+        
+        clearTimeout(searchTimeout);
+        errorMessage.style.display = 'none';
+
+        if (word.length > 0) {
+            loading.style.display = 'block';
+            
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const data = await fetchWordData(word);
+                    loading.style.display = 'none';
+                    displayResults(data);
+                    
+                    // Add to history if it's a new search
+                    if (word !== searchHistory[currentHistoryIndex]) {
+                        // Remove any forward history
+                        searchHistory = searchHistory.slice(0, currentHistoryIndex + 1);
+                        searchHistory.push(word);
+                        currentHistoryIndex = searchHistory.length - 1;
+                        updateNavigationButtons();
+                    }
+                } catch (error) {
+                    loading.style.display = 'none';
+                    errorMessage.textContent = 'Word not found or error occurred';
+                    errorMessage.style.display = 'block';
+                    definitionsPanel.innerHTML = '';
+                    thesaurusPanel.innerHTML = '';
+                }
+            }, 500);
+        } else {
+            loading.style.display = 'none';
+            definitionsPanel.innerHTML = '';
+            thesaurusPanel.innerHTML = '';
+        }
+    });
+
+    // Click handlers for navigation buttons
+    prevButton.addEventListener('click', function() {
+        if (currentHistoryIndex > 0) {
+            currentHistoryIndex--;
+            searchInput.value = searchHistory[currentHistoryIndex];
+            searchInput.dispatchEvent(new Event('input'));
+        }
+    });
+
+    nextButton.addEventListener('click', function() {
+        if (currentHistoryIndex < searchHistory.length - 1) {
+            currentHistoryIndex++;
+            searchInput.value = searchHistory[currentHistoryIndex];
+            searchInput.dispatchEvent(new Event('input'));
+        }
+    });
+
+    // Clickable mode toggle
+    clickableToggle.addEventListener('click', function() {
+        isClickableMode = !isClickableMode;
+        this.classList.toggle('active');
+        if (searchInput.value.trim()) {
+            searchInput.dispatchEvent(new Event('input'));
+        }
+    });
+
+    // Handle clicks on words when clickable mode is on
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('word-chip') || 
+            (isClickableMode && e.target.classList.contains('clickable-word'))) {
+            const word = e.target.textContent.replace(/[^a-zA-Z]/g, '');
+            if (word) {
+                searchInput.value = word;
+                searchInput.dispatchEvent(new Event('input'));
+            }
+        }
+    });
+});
+</script>
+</body>
+</html>
